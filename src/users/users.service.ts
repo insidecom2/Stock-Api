@@ -6,12 +6,19 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { compareSync, genSaltSync, hashSync } from 'bcrypt';
 import { returnApi } from 'src/utils/utils';
+import { threadId } from 'worker_threads';
 
 @Injectable()
 export class UsersService {
   constructor(@InjectRepository(User) private userRepo: Repository<User>) {}
   async create(createUserDto: CreateUserDto): Promise<any> {
-    const createUser: any = await this.userRepo.create(createUserDto);
+    const getData: any = await this.userRepo.find({
+      email: createUserDto.email,
+    });
+    if (getData) returnApi(false, '', 'email is already');
+
+    const create: any = this.userRepo.create(createUserDto);
+    const createUser: any = await this.userRepo.save(create);
     if (createUser) return returnApi(true, createUser);
     else return returnApi(false, '', 'cannot create user');
   }
